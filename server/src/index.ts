@@ -4,7 +4,8 @@ import multer from 'multer'
 import db from './db.js'
 import { parseCsv } from './csv-parser.js'
 import { detectRecurring } from './recurring.js'
-import type { Transaction } from '../../shared/types.js'
+import type { Transaction, CancelledSubscription } from '../../shared/types.js'
+import crypto from 'crypto'
 
 const app = express()
 const PORT = 3001
@@ -112,6 +113,70 @@ app.get('/api/recurring', (req, res) => {
       results = results.filter(r => r.frequency === frequency)
     }
     res.json(results)
+  } catch (err) {
+    res.status(500).json({ error: (err as Error).message })
+  }
+})
+
+// --- Cancellation Tracking ---
+const frequencyMultiplier: Record<string, number> = { weekly: 52, monthly: 12, quarterly: 4, annual: 1 }
+
+app.post('/api/recurring/cancel', (req, res) => {
+  try {
+    const { description, averageAmount, frequency } = req.body
+    if (!description || averageAmount == null || !frequency) {
+      res.status(400).json({ error: 'Missing required fields' }); return
+    }
+    const mult = frequencyMultiplier[frequency]
+    if (!mult) { res.status(400).json({ error: 'Invalid frequency' }); return }
+    const annualSavings = Math.round(Math.abs(averageAmount) * mult * 100) / 100
+    const id = crypto.randomUUID()
+    db.prepare(
+      'INSERT INTO cancelled_subscriptions (id, description, average_amount, frequency, annual_savings) VALUES (?, ?, ?, ?, ?)'
+    ).run(id, description, averageAmount, frequency, annualSavings)
+    res.json({ id, description, averageAmount, frequency, annualSavings, cancelledAt: new Date().toISOString() })
+  } catch (err) {
+    res.status(500).json({ error: (err as Error).message })
+  }
+})
+
+app.delete('/api/recurring/cancel/:id', (req, res) => {
+  try {
+    db.prepare('DELETE FROM cancelled_subscriptions WHERE id = ?').run(req.params.id)
+    res.json({ ok: true })
+  } catch (err) {
+    res.status(500).json({ error: (err as Error).message })
+  }
+})
+
+app.get('/api/recurring/cancelled', (_req, res) => {
+  try {
+    const rows = db.prepare('SELECT * FROM cancelled_subscriptions ORDER BY cancelled_at DESC').all() as any[]
+    const items: CancelledSubscription[] = rows.map(r => ({
+      id: r.id, description: r.description, averageAmount: r.average_amount,
+      frequency: r.frequency, cancelledAt: r.cancelled_at, annualSavings: r.annual_savings
+    }))
+    const totalAnnual = items.reduce((s, i) => s + i.annualSavings, 0)
+    res.json({ items, totalAnnualSavings: Math.round(totalAnnual * 100) / 100 })
+  } catch (err) {
+    res.status(500).json({ error: (err as Error).message })
+  }
+})
+
+app.get('/api/recurring/savings', (_req, res) => {
+  try {
+    const rows = db.prepare('SELECT * FROM cancelled_subscriptions ORDER BY cancelled_at DESC').all() as any[]
+    const items: CancelledSubscription[] = rows.map(r => ({
+      id: r.id, description: r.description, averageAmount: r.average_amount,
+      frequency: r.frequency, cancelledAt: r.cancelled_at, annualSavings: r.annual_savings
+    }))
+    const totalAnnual = items.reduce((s, i) => s + i.annualSavings, 0)
+    res.json({
+      totalAnnualSavings: Math.round(totalAnnual * 100) / 100,
+      totalMonthlySavings: Math.round(totalAnnual / 12 * 100) / 100,
+      count: items.length,
+      items
+    })
   } catch (err) {
     res.status(500).json({ error: (err as Error).message })
   }

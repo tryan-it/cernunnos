@@ -25,4 +25,15 @@ db.exec(`
   )
 `)
 
+db.exec(`
+  CREATE TABLE IF NOT EXISTS cancelled_subscriptions (
+    id TEXT PRIMARY KEY,
+    description TEXT NOT NULL,
+    average_amount REAL NOT NULL,
+    frequency TEXT NOT NULL,
+    cancelled_at TEXT DEFAULT (datetime('now')),
+    annual_savings REAL NOT NULL
+  )
+`)
+
 export default db

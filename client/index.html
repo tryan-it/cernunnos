@@ -118,6 +118,7 @@
 
     <!-- Recurring Payments View -->
     <div id="view-recurring" class="hidden">
+      <div id="savings-banner" class="savings-banner hidden"></div>
       <div id="recurring-summary" class="recurring-summary"></div>
       <div id="recurring-filters">
         <button class="filter-btn active" data-freq="all">All</button>
@@ -136,10 +137,26 @@
             <th class="sortable" data-sort="lastDate">Last Charged</th>
             <th class="sortable" data-sort="nextExpectedDate">Next Expected</th>
             <th class="sortable" data-sort="occurrences"># Occurrences</th>
+            <th>Action</th>
           </tr>
         </thead>
         <tbody></tbody>
       </table>
+      <div id="cancelled-section" class="hidden">
+        <h2 style="margin: 1.5rem 0 1rem;">Cancelled Subscriptions</h2>
+        <table id="cancelled-table">
+          <thead>
+            <tr>
+              <th>Description</th>
+              <th>Was Costing</th>
+              <th>Annual Savings</th>
+              <th>Cancelled</th>
+              <th></th>
+            </tr>
+          </thead>
+          <tbody></tbody>
+        </table>
+      </div>
       <div id="recurring-detail" class="hidden">
         <div class="expanded-header">
           <h3 id="recurring-detail-title"></h3>

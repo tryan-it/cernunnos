@@ -20,3 +20,12 @@ export interface RecurringPayment {
   occurrences: number
   transactions: Transaction[]
 }
+
+export interface CancelledSubscription {
+  id: string
+  description: string
+  averageAmount: number
+  frequency: 'weekly' | 'monthly' | 'quarterly' | 'annual'
+  cancelledAt: string
+  annualSavings: number
+}

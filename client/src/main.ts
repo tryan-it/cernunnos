@@ -1,4 +1,4 @@
-import type { Transaction, RecurringPayment } from '../../shared/types.js'
+import type { Transaction, RecurringPayment, CancelledSubscription } from '../../shared/types.js'
 import { buildBars, renderChart, type WaterfallBar } from './waterfall.js'
 
 // Elements
@@ -222,17 +222,43 @@ async function fetchStats() {
 
 // --- Recurring Payments ---
 let recurringData: RecurringPayment[] = []
+let cancelledData: CancelledSubscription[] = []
+let cancelledDescriptions = new Set<string>()
 let currentFreqFilter = 'all'
 let sortKey = 'occurrences'
 let sortAsc = false
 
 async function fetchRecurring() {
   try {
-    const res = await fetch('/api/recurring')
-    recurringData = await res.json()
+    const [recRes, canRes] = await Promise.all([
+      fetch('/api/recurring'),
+      fetch('/api/recurring/savings')
+    ])
+    recurringData = await recRes.json()
+    const savings = await canRes.json()
+    cancelledData = savings.items || []
+    cancelledDescriptions = new Set(cancelledData.map((c: CancelledSubscription) => c.description))
+    renderSavingsBanner(savings)
     renderRecurringSummary()
     renderRecurringTable()
+    renderCancelledTable()
   } catch {}
+}
+
+function renderSavingsBanner(savings: { totalAnnualSavings: number; totalMonthlySavings: number; count: number; items: CancelledSubscription[] }) {
+  const el = document.getElementById('savings-banner')!
+  if (savings.count === 0) { el.classList.add('hidden'); return }
+  el.classList.remove('hidden')
+  el.innerHTML = `
+    <div class="savings-icon">💰</div>
+    <div class="savings-text">
+      <div class="savings-headline">You're saving <span class="savings-amount">${fmt(-savings.totalAnnualSavings)}</span>/year
+        <span class="savings-monthly">(${fmt(-savings.totalMonthlySavings)}/month)</span>
+        by cancelling <strong>${savings.count}</strong> subscription${savings.count !== 1 ? 's' : ''}
+      </div>
+      <div class="savings-items">${savings.items.map((i: CancelledSubscription) => `<span class="savings-chip">${i.description} · ${fmt(-i.annualSavings)}/yr</span>`).join('')}</div>
+    </div>
+  `
 }
 
 function renderRecurringSummary() {
@@ -271,6 +297,7 @@ function renderRecurringTable() {
   })
 
   for (const r of filtered) {
+    if (cancelledDescriptions.has(r.description)) continue
     const tr = document.createElement('tr')
     tr.style.cursor = 'pointer'
     const amtClass = r.averageAmount < 0 ? 'negative' : 'positive'
@@ -282,7 +309,12 @@ function renderRecurringTable() {
       <td>${r.lastDate}</td>
       <td>${r.nextExpectedDate}</td>
       <td>${r.occurrences}</td>
+      <td><button class="cancel-btn" data-desc="${r.description.replace(/"/g, '&quot;')}">Cancel</button></td>
     `
+    tr.querySelector('.cancel-btn')!.addEventListener('click', (e) => {
+      e.stopPropagation()
+      handleCancel(r)
+    })
     tr.addEventListener('click', () => showRecurringDetail(r))
     tbody.appendChild(tr)
   }
@@ -298,6 +330,53 @@ function showRecurringDetail(r: RecurringPayment) {
     const tr = document.createElement('tr')
     const cls = t.amount < 0 ? 'negative' : 'positive'
     tr.innerHTML = `<td>${t.date}</td><td>${t.description}</td><td class="${cls}">${fmt(t.amount)}</td>`
+    tbody.appendChild(tr)
+  }
+}
+
+async function handleCancel(r: RecurringPayment) {
+  const btn = document.querySelector(`.cancel-btn[data-desc="${r.description.replace(/"/g, '&quot;')}"]`) as HTMLButtonElement
+  if (!btn) return
+  if (btn.dataset.confirm !== 'true') {
+    btn.textContent = 'Confirm?'
+    btn.classList.add('confirm')
+    btn.dataset.confirm = 'true'
+    setTimeout(() => { btn.textContent = 'Cancel'; btn.classList.remove('confirm'); btn.dataset.confirm = '' }, 3000)
+    return
+  }
+  try {
+    const res = await fetch('/api/recurring/cancel', {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ description: r.description, averageAmount: r.averageAmount, frequency: r.frequency })
+    })
+    if (res.ok) fetchRecurring()
+  } catch {}
+}
+
+async function handleUndo(id: string) {
+  try {
+    const res = await fetch(`/api/recurring/cancel/${id}`, { method: 'DELETE' })
+    if (res.ok) fetchRecurring()
+  } catch {}
+}
+
+function renderCancelledTable() {
+  const section = document.getElementById('cancelled-section')!
+  const tbody = document.querySelector('#cancelled-table tbody')!
+  tbody.innerHTML = ''
+  if (cancelledData.length === 0) { section.classList.add('hidden'); return }
+  section.classList.remove('hidden')
+  for (const c of cancelledData) {
+    const tr = document.createElement('tr')
+    tr.innerHTML = `
+      <td>${c.description}</td>
+      <td class="negative">${fmt(c.averageAmount)}/${c.frequency}</td>
+      <td class="positive">${fmt(c.annualSavings)}/yr</td>
+      <td>${new Date(c.cancelledAt).toLocaleDateString()}</td>
+      <td><button class="undo-btn">Undo</button></td>
+    `
+    tr.querySelector('.undo-btn')!.addEventListener('click', () => handleUndo(c.id))
     tbody.appendChild(tr)
   }
 }

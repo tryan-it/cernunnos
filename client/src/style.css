@@ -272,3 +272,51 @@ th.sort-desc::after { content: ' ▼'; font-size: 0.7em; }
 }
 
 #recurring-table tbody tr:hover { background: rgba(108, 99, 255, 0.08); }
+
+/* Savings Banner */
+.savings-banner {
+  background: linear-gradient(135deg, rgba(46, 204, 113, 0.15), rgba(46, 204, 113, 0.05));
+  border: 1px solid rgba(46, 204, 113, 0.3);
+  border-radius: 12px;
+  padding: 1.25rem 1.5rem;
+  margin-bottom: 1.5rem;
+  display: flex;
+  align-items: center;
+  gap: 1rem;
+}
+.savings-icon { font-size: 2.5rem; }
+.savings-headline { font-size: 1.1rem; color: #e0e0e0; }
+.savings-amount { color: #2ecc71; font-size: 1.4rem; font-weight: 700; }
+.savings-monthly { color: #888; font-size: 0.9rem; }
+.savings-items { margin-top: 0.5rem; display: flex; flex-wrap: wrap; gap: 0.4rem; }
+.savings-chip {
+  background: rgba(46, 204, 113, 0.12);
+  color: #2ecc71;
+  border-radius: 4px;
+  padding: 0.2rem 0.6rem;
+  font-size: 0.75rem;
+}
+
+/* Cancel / Undo buttons */
+.cancel-btn, .undo-btn {
+  background: none;
+  border: 1px solid #555;
+  color: #888;
+  border-radius: 4px;
+  padding: 0.2rem 0.6rem;
+  font-size: 0.75rem;
+  cursor: pointer;
+  transition: all 0.2s;
+}
+.cancel-btn:hover { border-color: #e74c3c; color: #e74c3c; }
+.cancel-btn.confirm { border-color: #e74c3c; color: #fff; background: #e74c3c; }
+.undo-btn:hover { border-color: #6c63ff; color: #6c63ff; }
+
+/* Cancelled table */
+#cancelled-table {
+  background: #181a20;
+  border-radius: 10px;
+  border: 1px solid #2a2d35;
+  overflow: hidden;
+}
+#cancelled-section h2 { color: #888; font-size: 1.1rem; }
