@@ -186,3 +186,89 @@ th, td { padding: 0.5rem 0.75rem; text-align: left; border-bottom: 1px solid #22
 th { color: #888; font-weight: 600; }
 td.negative { color: #e74c3c; }
 td.positive { color: #2ecc71; }
+
+/* Navigation */
+#nav {
+  display: flex;
+  gap: 0.5rem;
+  margin-bottom: 1.5rem;
+}
+.nav-btn {
+  background: #181a20;
+  color: #888;
+  border: 1px solid #2a2d35;
+  border-radius: 8px;
+  padding: 0.5rem 1.25rem;
+  cursor: pointer;
+  font-size: 0.9rem;
+  transition: all 0.2s;
+}
+.nav-btn:hover { color: #e0e0e0; border-color: #444; }
+.nav-btn.active { color: #e0e0e0; background: #6c63ff; border-color: #6c63ff; }
+
+/* Data Stats */
+#data-stats {
+  margin-bottom: 1rem;
+  color: #888;
+  font-size: 0.85rem;
+}
+
+/* Recurring Payments */
+.recurring-summary {
+  display: flex;
+  gap: 1rem;
+  margin-bottom: 1.5rem;
+}
+
+#recurring-filters {
+  display: flex;
+  gap: 0.5rem;
+  margin-bottom: 1rem;
+}
+.filter-btn {
+  background: #181a20;
+  color: #888;
+  border: 1px solid #2a2d35;
+  border-radius: 6px;
+  padding: 0.35rem 0.9rem;
+  cursor: pointer;
+  font-size: 0.8rem;
+  transition: all 0.2s;
+}
+.filter-btn:hover { color: #e0e0e0; }
+.filter-btn.active { color: #e0e0e0; background: #6c63ff; border-color: #6c63ff; }
+
+#recurring-table {
+  background: #181a20;
+  border-radius: 10px;
+  border: 1px solid #2a2d35;
+  overflow: hidden;
+}
+#recurring-table th { cursor: pointer; user-select: none; position: relative; }
+th.sortable:hover { color: #e0e0e0; }
+th.sort-asc::after { content: ' ▲'; font-size: 0.7em; }
+th.sort-desc::after { content: ' ▼'; font-size: 0.7em; }
+
+.freq-badge {
+  padding: 0.15rem 0.5rem;
+  border-radius: 4px;
+  font-size: 0.75rem;
+  text-transform: uppercase;
+  font-weight: 600;
+}
+.freq-weekly { background: rgba(52, 152, 219, 0.2); color: #3498db; }
+.freq-monthly { background: rgba(108, 99, 255, 0.2); color: #8b83ff; }
+.freq-quarterly { background: rgba(241, 196, 15, 0.2); color: #f1c40f; }
+.freq-annual { background: rgba(231, 76, 60, 0.2); color: #e74c3c; }
+
+#recurring-detail {
+  margin-top: 1rem;
+  background: #181a20;
+  border-radius: 10px;
+  border: 1px solid #2a2d35;
+  padding: 1rem 1.25rem;
+  max-height: 400px;
+  overflow-y: auto;
+}
+
+#recurring-table tbody tr:hover { background: rgba(108, 99, 255, 0.08); }

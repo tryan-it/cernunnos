@@ -9,3 +9,14 @@ export interface Transaction {
   account: string
   source: 'chase_checking' | 'chase_credit'
 }
+
+export interface RecurringPayment {
+  description: string
+  category: string
+  frequency: 'weekly' | 'monthly' | 'quarterly' | 'annual'
+  averageAmount: number
+  lastDate: string
+  nextExpectedDate: string
+  occurrences: number
+  transactions: Transaction[]
+}

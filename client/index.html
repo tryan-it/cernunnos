@@ -11,6 +11,18 @@
     <h1>🦌 Cernunnos</h1>
     <p class="subtitle">Personal Finance Cash Flow Visualization</p>
 
+    <!-- Navigation -->
+    <nav id="nav">
+      <button class="nav-btn active" data-view="dashboard">Dashboard</button>
+      <button class="nav-btn" data-view="recurring">Recurring Payments</button>
+    </nav>
+
+    <!-- Data Stats -->
+    <div id="data-stats" class="hidden">
+      <span id="total-count"></span> · <span id="date-range-info"></span>
+    </div>
+
+    <div id="view-dashboard">
     <div id="drop-zone">
       <p>Drop a Chase CSV here, or click to select</p>
       <input type="file" id="file-input" accept=".csv" />
@@ -102,6 +114,44 @@
         <tbody></tbody>
       </table>
     </div>
+    </div> <!-- /view-dashboard -->
+
+    <!-- Recurring Payments View -->
+    <div id="view-recurring" class="hidden">
+      <div id="recurring-summary" class="recurring-summary"></div>
+      <div id="recurring-filters">
+        <button class="filter-btn active" data-freq="all">All</button>
+        <button class="filter-btn" data-freq="weekly">Weekly</button>
+        <button class="filter-btn" data-freq="monthly">Monthly</button>
+        <button class="filter-btn" data-freq="quarterly">Quarterly</button>
+        <button class="filter-btn" data-freq="annual">Annual</button>
+      </div>
+      <table id="recurring-table">
+        <thead>
+          <tr>
+            <th class="sortable" data-sort="description">Description</th>
+            <th class="sortable" data-sort="category">Category</th>
+            <th class="sortable" data-sort="frequency">Frequency</th>
+            <th class="sortable" data-sort="averageAmount">Avg Amount</th>
+            <th class="sortable" data-sort="lastDate">Last Charged</th>
+            <th class="sortable" data-sort="nextExpectedDate">Next Expected</th>
+            <th class="sortable" data-sort="occurrences"># Occurrences</th>
+          </tr>
+        </thead>
+        <tbody></tbody>
+      </table>
+      <div id="recurring-detail" class="hidden">
+        <div class="expanded-header">
+          <h3 id="recurring-detail-title"></h3>
+          <button id="recurring-detail-close">✕</button>
+        </div>
+        <table id="recurring-detail-table">
+          <thead><tr><th>Date</th><th>Description</th><th>Amount</th></tr></thead>
+          <tbody></tbody>
+        </table>
+      </div>
+    </div>
+
   </div>
   <script type="module" src="/src/main.ts"></script>
 </body>

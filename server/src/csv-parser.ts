@@ -1,6 +1,11 @@
-import { v4 as uuidv4 } from 'uuid'
+import { createHash } from 'crypto'
 import type { Transaction } from '../../shared/types.js'
 import { categorize } from './categorize.js'
+
+function generateId(date: string, description: string, amount: number, source: string): string {
+  const key = `${date}|${description}|${amount}|${source}`
+  return createHash('sha256').update(key).digest('hex').slice(0, 32)
+}
 
 function parseCsvLines(raw: string): string[][] {
   const lines = raw.trim().split(/\r?\n/)
@@ -80,9 +85,10 @@ export function parseCsv(raw: string, account: string): Transaction[] {
         if (isNaN(amount)) throw new Error(`Row ${i + 1}: invalid amount "${row[3]}"`)
         const balance = parseFloat(row[5])
 
+        const date = parseDate(row[1])
         transactions.push({
-          id: uuidv4(),
-          date: parseDate(row[1]),
+          id: generateId(date, row[2], amount, 'chase_checking'),
+          date,
           description: row[2],
           amount,
           type: amount < 0 ? 'debit' : 'credit',
@@ -100,9 +106,10 @@ export function parseCsv(raw: string, account: string): Transaction[] {
         // Normalize: expenses negative, income positive
         const amount = -rawAmount
 
+        const date = parseDate(row[0])
         transactions.push({
-          id: uuidv4(),
-          date: parseDate(row[0]),
+          id: generateId(date, row[2], amount, 'chase_credit'),
+          date,
           description: row[2],
           amount,
           type: amount < 0 ? 'debit' : 'credit',

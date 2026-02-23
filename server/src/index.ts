@@ -3,6 +3,7 @@ import cors from 'cors'
 import multer from 'multer'
 import db from './db.js'
 import { parseCsv } from './csv-parser.js'
+import { detectRecurring } from './recurring.js'
 import type { Transaction } from '../../shared/types.js'
 
 const app = express()
@@ -18,9 +19,11 @@ const insertStmt = db.prepare(`
   VALUES (@id, @date, @description, @amount, @type, @balance, @category, @account, @source)
 `)
 
-const insertMany = db.transaction((txns: Transaction[]) => {
+const insertMany = db.transaction((txns: Transaction[]): { imported: number; skipped: number } => {
+  let imported = 0
+  let skipped = 0
   for (const t of txns) {
-    insertStmt.run({
+    const result = insertStmt.run({
       id: t.id,
       date: t.date,
       description: t.description,
@@ -31,7 +34,10 @@ const insertMany = db.transaction((txns: Transaction[]) => {
       account: t.account,
       source: t.source,
     })
+    if (result.changes > 0) imported++
+    else skipped++
   }
+  return { imported, skipped }
 })
 
 // POST /api/upload
@@ -46,9 +52,9 @@ app.post('/api/upload', upload.single('file'), (req, res) => {
     const raw = req.file.buffer.toString('utf-8')
     const transactions = parseCsv(raw, account)
 
-    insertMany(transactions)
+    const { imported, skipped } = insertMany(transactions)
 
-    res.json({ count: transactions.length, transactions })
+    res.json({ total: transactions.length, imported, skipped })
   } catch (err) {
     res.status(400).json({ error: (err as Error).message })
   }
@@ -81,6 +87,31 @@ app.get('/api/transactions', (_req, res) => {
     query += ' ORDER BY date DESC'
     const rows = db.prepare(query).all(...params)
     res.json(rows)
+  } catch (err) {
+    res.status(500).json({ error: (err as Error).message })
+  }
+})
+
+// GET /api/stats
+app.get('/api/stats', (_req, res) => {
+  try {
+    const row = db.prepare('SELECT COUNT(*) as count, MIN(date) as minDate, MAX(date) as maxDate FROM transactions').get() as any
+    res.json({ count: row.count, minDate: row.minDate, maxDate: row.maxDate })
+  } catch (err) {
+    res.status(500).json({ error: (err as Error).message })
+  }
+})
+
+// GET /api/recurring
+app.get('/api/recurring', (req, res) => {
+  try {
+    const rows = db.prepare('SELECT * FROM transactions ORDER BY date ASC').all() as Transaction[]
+    let results = detectRecurring(rows)
+    const { frequency } = req.query
+    if (typeof frequency === 'string' && frequency !== 'all') {
+      results = results.filter(r => r.frequency === frequency)
+    }
+    res.json(results)
   } catch (err) {
     res.status(500).json({ error: (err as Error).message })
   }

@@ -1,4 +1,4 @@
-import type { Transaction } from '../../shared/types.js'
+import type { Transaction, RecurringPayment } from '../../shared/types.js'
 import { buildBars, renderChart, type WaterfallBar } from './waterfall.js'
 
 // Elements
@@ -171,7 +171,9 @@ async function uploadFile(file: File) {
     const res = await fetch('/api/upload', { method: 'POST', body: form })
     const data = await res.json()
     if (!res.ok) { showStatus(`Error: ${data.error}`, 'error'); return }
-    showStatus(`Imported ${data.count} transactions`, 'success')
+    const msg = `Imported ${data.imported} transactions` + (data.skipped > 0 ? ` (${data.skipped} duplicates skipped)` : '')
+    showStatus(msg, 'success')
+    fetchStats()
     fetchAndRender()
   } catch (err) {
     showStatus(`Upload failed: ${(err as Error).message}`, 'error')
@@ -189,5 +191,143 @@ dropZone.addEventListener('drop', (e) => {
 dropZone.addEventListener('click', () => fileInput.click())
 fileInput.addEventListener('change', () => { const file = fileInput.files?.[0]; if (file) uploadFile(file) })
 
+// --- Navigation ---
+const navBtns = document.querySelectorAll('.nav-btn')
+const viewDashboard = document.getElementById('view-dashboard')!
+const viewRecurring = document.getElementById('view-recurring')!
+
+navBtns.forEach(btn => {
+  btn.addEventListener('click', () => {
+    navBtns.forEach(b => b.classList.remove('active'))
+    btn.classList.add('active')
+    const view = (btn as HTMLElement).dataset.view
+    viewDashboard.classList.toggle('hidden', view !== 'dashboard')
+    viewRecurring.classList.toggle('hidden', view !== 'recurring')
+    if (view === 'recurring') fetchRecurring()
+  })
+})
+
+// --- Data Stats ---
+async function fetchStats() {
+  try {
+    const res = await fetch('/api/stats')
+    const data = await res.json()
+    if (data.count > 0) {
+      document.getElementById('data-stats')!.classList.remove('hidden')
+      document.getElementById('total-count')!.textContent = `${data.count} transactions`
+      document.getElementById('date-range-info')!.textContent = `${data.minDate} to ${data.maxDate}`
+    }
+  } catch {}
+}
+
+// --- Recurring Payments ---
+let recurringData: RecurringPayment[] = []
+let currentFreqFilter = 'all'
+let sortKey = 'occurrences'
+let sortAsc = false
+
+async function fetchRecurring() {
+  try {
+    const res = await fetch('/api/recurring')
+    recurringData = await res.json()
+    renderRecurringSummary()
+    renderRecurringTable()
+  } catch {}
+}
+
+function renderRecurringSummary() {
+  const el = document.getElementById('recurring-summary')!
+  const monthly = recurringData.filter(r => r.frequency === 'monthly')
+  const annual = recurringData.filter(r => r.frequency === 'annual')
+  const quarterly = recurringData.filter(r => r.frequency === 'quarterly')
+  const weekly = recurringData.filter(r => r.frequency === 'weekly')
+
+  const monthlyTotal = monthly.reduce((s, r) => s + r.averageAmount, 0)
+  const annualFromMonthly = monthlyTotal * 12
+  const annualDirect = annual.reduce((s, r) => s + r.averageAmount, 0)
+  const annualFromQuarterly = quarterly.reduce((s, r) => s + r.averageAmount * 4, 0)
+  const annualFromWeekly = weekly.reduce((s, r) => s + r.averageAmount * 52, 0)
+  const totalAnnual = annualFromMonthly + annualDirect + annualFromQuarterly + annualFromWeekly
+
+  el.innerHTML = `
+    <div class="stat expenses"><span class="stat-label">Monthly Recurring</span><span class="stat-value">${fmt(monthlyTotal)}</span></div>
+    <div class="stat net"><span class="stat-label">Annual Recurring (est.)</span><span class="stat-value">${fmt(totalAnnual)}</span></div>
+    <div class="stat income"><span class="stat-label">Recurring Patterns</span><span class="stat-value">${recurringData.length}</span></div>
+  `
+}
+
+function renderRecurringTable() {
+  const tbody = document.querySelector('#recurring-table tbody')!
+  tbody.innerHTML = ''
+
+  let filtered = currentFreqFilter === 'all' ? recurringData : recurringData.filter(r => r.frequency === currentFreqFilter)
+
+  // Sort
+  filtered.sort((a, b) => {
+    const av = (a as any)[sortKey]
+    const bv = (b as any)[sortKey]
+    const cmp = typeof av === 'string' ? av.localeCompare(bv) : av - bv
+    return sortAsc ? cmp : -cmp
+  })
+
+  for (const r of filtered) {
+    const tr = document.createElement('tr')
+    tr.style.cursor = 'pointer'
+    const amtClass = r.averageAmount < 0 ? 'negative' : 'positive'
+    tr.innerHTML = `
+      <td>${r.description}</td>
+      <td>${r.category}</td>
+      <td><span class="freq-badge freq-${r.frequency}">${r.frequency}</span></td>
+      <td class="${amtClass}">${fmt(r.averageAmount)}</td>
+      <td>${r.lastDate}</td>
+      <td>${r.nextExpectedDate}</td>
+      <td>${r.occurrences}</td>
+    `
+    tr.addEventListener('click', () => showRecurringDetail(r))
+    tbody.appendChild(tr)
+  }
+}
+
+function showRecurringDetail(r: RecurringPayment) {
+  const el = document.getElementById('recurring-detail')!
+  el.classList.remove('hidden')
+  document.getElementById('recurring-detail-title')!.textContent = `${r.description} — ${r.frequency} (${r.occurrences} occurrences)`
+  const tbody = document.querySelector('#recurring-detail-table tbody')!
+  tbody.innerHTML = ''
+  for (const t of r.transactions) {
+    const tr = document.createElement('tr')
+    const cls = t.amount < 0 ? 'negative' : 'positive'
+    tr.innerHTML = `<td>${t.date}</td><td>${t.description}</td><td class="${cls}">${fmt(t.amount)}</td>`
+    tbody.appendChild(tr)
+  }
+}
+
+document.getElementById('recurring-detail-close')!.addEventListener('click', () => {
+  document.getElementById('recurring-detail')!.classList.add('hidden')
+})
+
+// Filter buttons
+document.querySelectorAll('.filter-btn').forEach(btn => {
+  btn.addEventListener('click', () => {
+    document.querySelectorAll('.filter-btn').forEach(b => b.classList.remove('active'))
+    btn.classList.add('active')
+    currentFreqFilter = (btn as HTMLElement).dataset.freq || 'all'
+    renderRecurringTable()
+  })
+})
+
+// Sortable columns
+document.querySelectorAll('#recurring-table th.sortable').forEach(th => {
+  th.addEventListener('click', () => {
+    const key = (th as HTMLElement).dataset.sort!
+    if (sortKey === key) sortAsc = !sortAsc
+    else { sortKey = key; sortAsc = true }
+    document.querySelectorAll('#recurring-table th.sortable').forEach(h => h.classList.remove('sort-asc', 'sort-desc'))
+    th.classList.add(sortAsc ? 'sort-asc' : 'sort-desc')
+    renderRecurringTable()
+  })
+})
+
 // Initial load
+fetchStats()
 fetchAndRender()
