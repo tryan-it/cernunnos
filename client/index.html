@@ -1,0 +1,40 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Cernunnos</title>
+  <link rel="stylesheet" href="/src/style.css" />
+</head>
+<body>
+  <div id="app">
+    <h1>🦌 Cernunnos</h1>
+    <p class="subtitle">Personal Finance Cash Flow Visualization</p>
+
+    <div id="drop-zone">
+      <p>Drop a Chase CSV here, or click to select</p>
+      <input type="file" id="file-input" accept=".csv" />
+    </div>
+
+    <div id="status" class="hidden"></div>
+
+    <div id="transactions" class="hidden">
+      <h2>Transactions</h2>
+      <table id="txn-table">
+        <thead>
+          <tr>
+            <th>Date</th>
+            <th>Description</th>
+            <th>Amount</th>
+            <th>Type</th>
+            <th>Source</th>
+            <th>Category</th>
+          </tr>
+        </thead>
+        <tbody></tbody>
+      </table>
+    </div>
+  </div>
+  <script type="module" src="/src/main.ts"></script>
+</body>
+</html>
