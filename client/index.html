@@ -16,8 +16,76 @@
       <input type="file" id="file-input" accept=".csv" />
     </div>
 
-    <div id="status" class="hidden"></div>
+    <div id="status"></div>
 
+    <!-- Controls -->
+    <div id="controls" class="hidden">
+      <div class="control-row">
+        <div class="control-group">
+          <label>Date Range</label>
+          <select id="date-range">
+            <option value="this-month">This Month</option>
+            <option value="last-month">Last Month</option>
+            <option value="3-months">Last 3 Months</option>
+            <option value="6-months">Last 6 Months</option>
+            <option value="ytd">Year to Date</option>
+            <option value="all" selected>All Time</option>
+            <option value="custom">Custom Range</option>
+          </select>
+        </div>
+        <div class="control-group custom-dates hidden" id="custom-dates">
+          <label>From</label>
+          <input type="date" id="date-start" />
+          <label>To</label>
+          <input type="date" id="date-end" />
+        </div>
+        <div class="control-group">
+          <label>Account</label>
+          <select id="account-filter">
+            <option value="all">All Accounts</option>
+            <option value="chase_checking">Checking</option>
+            <option value="chase_credit">Credit Card</option>
+          </select>
+        </div>
+      </div>
+    </div>
+
+    <!-- Summary Stats -->
+    <div id="summary" class="hidden">
+      <div class="stat income">
+        <span class="stat-label">Total Income</span>
+        <span class="stat-value" id="stat-income">$0</span>
+      </div>
+      <div class="stat expenses">
+        <span class="stat-label">Total Expenses</span>
+        <span class="stat-value" id="stat-expenses">$0</span>
+      </div>
+      <div class="stat net">
+        <span class="stat-label">Net Cash Flow</span>
+        <span class="stat-value" id="stat-net">$0</span>
+      </div>
+    </div>
+
+    <!-- Chart -->
+    <div id="chart-container" class="hidden">
+      <div id="waterfall-chart"></div>
+    </div>
+
+    <!-- Expanded transactions -->
+    <div id="expanded-txns" class="hidden">
+      <div class="expanded-header">
+        <h3 id="expanded-title"></h3>
+        <button id="expanded-close">✕</button>
+      </div>
+      <table id="expanded-table">
+        <thead>
+          <tr><th>Date</th><th>Description</th><th>Amount</th></tr>
+        </thead>
+        <tbody></tbody>
+      </table>
+    </div>
+
+    <!-- Transaction table -->
     <div id="transactions" class="hidden">
       <h2>Transactions</h2>
       <table id="txn-table">

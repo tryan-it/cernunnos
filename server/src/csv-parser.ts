@@ -1,5 +1,6 @@
 import { v4 as uuidv4 } from 'uuid'
 import type { Transaction } from '../../shared/types.js'
+import { categorize } from './categorize.js'
 
 function parseCsvLines(raw: string): string[][] {
   const lines = raw.trim().split(/\r?\n/)
@@ -86,6 +87,7 @@ export function parseCsv(raw: string, account: string): Transaction[] {
           amount,
           type: amount < 0 ? 'debit' : 'credit',
           balance: isNaN(balance) ? undefined : balance,
+          category: categorize(row[2]),
           account,
           source: 'chase_checking',
         })

@@ -7,11 +7,12 @@ body {
   padding: 2rem;
 }
 
-#app { max-width: 1000px; margin: 0 auto; }
+#app { max-width: 1200px; margin: 0 auto; }
 
 h1 { font-size: 2rem; margin-bottom: 0.25rem; }
 .subtitle { color: #888; margin-bottom: 2rem; }
 
+/* Drop Zone */
 #drop-zone {
   border: 2px dashed #444;
   border-radius: 12px;
@@ -20,24 +21,163 @@ h1 { font-size: 2rem; margin-bottom: 0.25rem; }
   cursor: pointer;
   transition: border-color 0.2s, background 0.2s;
 }
-
 #drop-zone.dragover {
   border-color: #6c63ff;
   background: rgba(108, 99, 255, 0.05);
 }
-
 #drop-zone input { display: none; }
 
+/* Status */
 #status {
   margin-top: 1rem;
   padding: 0.75rem 1rem;
   border-radius: 8px;
   font-size: 0.9rem;
+  display: none;
 }
-#status.success { background: rgba(46, 204, 113, 0.15); color: #2ecc71; }
-#status.error { background: rgba(231, 76, 60, 0.15); color: #e74c3c; }
-.hidden { display: none; }
+#status.success { display: block; background: rgba(46, 204, 113, 0.15); color: #2ecc71; }
+#status.error { display: block; background: rgba(231, 76, 60, 0.15); color: #e74c3c; }
 
+.hidden { display: none !important; }
+
+/* Controls */
+#controls {
+  margin-top: 1.5rem;
+  padding: 1rem 1.25rem;
+  background: #181a20;
+  border-radius: 10px;
+  border: 1px solid #2a2d35;
+}
+.control-row {
+  display: flex;
+  gap: 1.5rem;
+  align-items: end;
+  flex-wrap: wrap;
+}
+.control-group {
+  display: flex;
+  flex-direction: column;
+  gap: 0.3rem;
+}
+.control-group label {
+  font-size: 0.75rem;
+  color: #888;
+  text-transform: uppercase;
+  letter-spacing: 0.05em;
+}
+.custom-dates {
+  flex-direction: row;
+  align-items: end;
+  gap: 0.5rem;
+}
+.custom-dates label { margin-right: 0; }
+select, input[type="date"] {
+  background: #0f1117;
+  color: #e0e0e0;
+  border: 1px solid #333;
+  border-radius: 6px;
+  padding: 0.4rem 0.6rem;
+  font-size: 0.85rem;
+}
+select:focus, input[type="date"]:focus {
+  outline: none;
+  border-color: #6c63ff;
+}
+
+/* Summary Stats */
+#summary {
+  display: flex;
+  gap: 1rem;
+  margin-top: 1.5rem;
+}
+.stat {
+  flex: 1;
+  padding: 1rem 1.25rem;
+  border-radius: 10px;
+  background: #181a20;
+  border: 1px solid #2a2d35;
+}
+.stat-label {
+  display: block;
+  font-size: 0.75rem;
+  color: #888;
+  text-transform: uppercase;
+  letter-spacing: 0.05em;
+  margin-bottom: 0.25rem;
+}
+.stat-value {
+  font-size: 1.5rem;
+  font-weight: 700;
+}
+.stat.income .stat-value { color: #2ecc71; }
+.stat.expenses .stat-value { color: #e74c3c; }
+.stat.net .stat-value { color: #6c63ff; }
+
+/* Chart */
+#chart-container {
+  margin-top: 1.5rem;
+  background: #181a20;
+  border-radius: 10px;
+  border: 1px solid #2a2d35;
+  padding: 1.5rem;
+  overflow-x: auto;
+}
+
+/* D3 chart styles */
+.bar-income { fill: #2ecc71; cursor: pointer; }
+.bar-income:hover { fill: #27ae60; }
+.bar-expense { fill: #e74c3c; cursor: pointer; }
+.bar-expense:hover { fill: #c0392b; }
+.bar-balance { fill: #6c63ff; }
+.bar-balance:hover { fill: #5a52e0; }
+.connector { stroke: #555; stroke-width: 1; stroke-dasharray: 3,3; }
+.axis text { fill: #888; font-size: 11px; }
+.axis path, .axis line { stroke: #333; }
+.axis .domain { stroke: #333; }
+
+/* Tooltip */
+.tooltip {
+  position: absolute;
+  background: #1e2028;
+  border: 1px solid #3a3d45;
+  border-radius: 8px;
+  padding: 0.6rem 0.8rem;
+  font-size: 0.8rem;
+  pointer-events: none;
+  z-index: 100;
+  box-shadow: 0 4px 12px rgba(0,0,0,0.4);
+}
+.tooltip .tt-category { font-weight: 600; margin-bottom: 0.2rem; }
+.tooltip .tt-amount { font-size: 1rem; font-weight: 700; }
+.tooltip .tt-count { color: #888; font-size: 0.75rem; }
+
+/* Expanded Transactions Panel */
+#expanded-txns {
+  margin-top: 1rem;
+  background: #181a20;
+  border-radius: 10px;
+  border: 1px solid #2a2d35;
+  padding: 1rem 1.25rem;
+  max-height: 400px;
+  overflow-y: auto;
+}
+.expanded-header {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  margin-bottom: 0.75rem;
+}
+.expanded-header h3 { font-size: 1rem; }
+.expanded-header button {
+  background: none;
+  border: none;
+  color: #888;
+  font-size: 1.2rem;
+  cursor: pointer;
+}
+.expanded-header button:hover { color: #e0e0e0; }
+
+/* Transaction table */
 #transactions { margin-top: 2rem; }
 h2 { margin-bottom: 1rem; }
 

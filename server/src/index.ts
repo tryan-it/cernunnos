@@ -57,20 +57,24 @@ app.post('/api/upload', upload.single('file'), (req, res) => {
 // GET /api/transactions
 app.get('/api/transactions', (_req, res) => {
   try {
-    const { start, end } = _req.query
+    const { start, end, source } = _req.query
     let query = 'SELECT * FROM transactions'
     const params: string[] = []
+    const conditions: string[] = []
 
-    if (start || end) {
-      const conditions: string[] = []
-      if (typeof start === 'string') {
-        conditions.push('date >= ?')
-        params.push(start)
-      }
-      if (typeof end === 'string') {
-        conditions.push('date <= ?')
-        params.push(end)
-      }
+    if (typeof start === 'string') {
+      conditions.push('date >= ?')
+      params.push(start)
+    }
+    if (typeof end === 'string') {
+      conditions.push('date <= ?')
+      params.push(end)
+    }
+    if (typeof source === 'string' && source !== 'all') {
+      conditions.push('source = ?')
+      params.push(source)
+    }
+    if (conditions.length > 0) {
       query += ' WHERE ' + conditions.join(' AND ')
     }
 
