@@ -113,12 +113,12 @@ export function renderSankey(
     .nodeId(((_d: any, i: number) => i) as any)
     .nodeWidth(20)
     .nodePadding(14)
-    .nodeAlign((node) => {
-      // Income cats = 0, Total Income = 1, Expenses/Savings = 2
-      const n = node as SNode
-      if (n.name === 'Total Income') return 1
-      if (n.sourceLinks && n.sourceLinks.length > 0 && n.targetLinks && n.targetLinks.length === 0) return 0
-      return 2
+    .nodeAlign((_node, n) => {
+      // Use the depth computed by d3-sankey from link structure:
+      // Income cats (no incoming links) → depth 0 (left)
+      // Total Income (middle) → depth 1 (center)
+      // Expense cats / Savings (no outgoing links) → depth 2 (right)
+      return n
     })
     .extent([[0, 0], [width, height]])
 
