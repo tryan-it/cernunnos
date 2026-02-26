@@ -1,5 +1,5 @@
 import type { Transaction, RecurringPayment, CancelledSubscription } from '../../shared/types.js'
-import { buildBars, renderChart, type WaterfallBar } from './waterfall.js'
+import { renderSankey } from './sankey.js'
 
 // Elements
 const dropZone = document.getElementById('drop-zone')!
@@ -97,19 +97,6 @@ function updateSummary(txns: Transaction[]) {
   netEl.style.color = (income + expenses) >= 0 ? '#2ecc71' : '#e74c3c'
 }
 
-function showExpanded(bar: WaterfallBar) {
-  expandedEl.classList.remove('hidden')
-  expandedTitle.textContent = `${bar.label} — ${fmt(bar.value)} (${bar.count} transactions)`
-  expandedTbody.innerHTML = ''
-  const sorted = [...bar.transactions].sort((a, b) => a.date.localeCompare(b.date))
-  for (const t of sorted) {
-    const tr = document.createElement('tr')
-    const cls = t.amount < 0 ? 'negative' : 'positive'
-    tr.innerHTML = `<td>${t.date}</td><td>${t.description}</td><td class="${cls}">${fmt(t.amount)}</td>`
-    expandedTbody.appendChild(tr)
-  }
-}
-
 expandedClose.addEventListener('click', () => expandedEl.classList.add('hidden'))
 
 async function fetchAndRender() {
@@ -136,8 +123,7 @@ async function fetchAndRender() {
     chartContainer.classList.remove('hidden')
 
     updateSummary(txns)
-    const bars = buildBars(txns)
-    renderChart(chartEl, bars, showExpanded)
+    renderSankey(chartEl, txns)
     renderTransactions(txns)
     expandedEl.classList.add('hidden')
   } catch {
