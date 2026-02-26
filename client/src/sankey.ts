@@ -1,5 +1,5 @@
 import * as d3 from 'd3'
-import { sankey as d3Sankey, sankeyLinkHorizontal, type SankeyGraph, type SankeyLink, type SankeyNode } from 'd3-sankey'
+import { sankey as d3Sankey, sankeyLinkHorizontal, sankeyLeft, type SankeyGraph, type SankeyLink, type SankeyNode } from 'd3-sankey'
 import type { Transaction } from '../../shared/types.js'
 
 interface NodeExtra { name: string; color: string }
@@ -113,13 +113,7 @@ export function renderSankey(
     .nodeId(((_d: any, i: number) => i) as any)
     .nodeWidth(20)
     .nodePadding(14)
-    .nodeAlign((_node, n) => {
-      // Use the depth computed by d3-sankey from link structure:
-      // Income cats (no incoming links) → depth 0 (left)
-      // Total Income (middle) → depth 1 (center)
-      // Expense cats / Savings (no outgoing links) → depth 2 (right)
-      return n
-    })
+    .nodeAlign(sankeyLeft)
     .extent([[0, 0], [width, height]])
 
   const graph = sankeyLayout({
