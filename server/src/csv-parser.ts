@@ -102,9 +102,9 @@ export function parseCsv(raw: string, account: string): Transaction[] {
         if (row.length < 6) throw new Error(`Row ${i + 1}: expected at least 6 columns, got ${row.length}`)
         const rawAmount = parseFloat(row[5])
         if (isNaN(rawAmount)) throw new Error(`Row ${i + 1}: invalid amount "${row[5]}"`)
-        // Chase credit: positive = charge (expense), negative = payment/credit
-        // Negate to normalize: expenses negative, income positive
-        const amount = -rawAmount
+        // Chase credit: negative = expense (Sale), positive = income (Payment)
+        // Already matches our convention, no negation needed
+        const amount = rawAmount
 
         const date = parseDate(row[0])
         transactions.push({
